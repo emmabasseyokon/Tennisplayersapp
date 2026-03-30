@@ -37,6 +37,36 @@ export async function getMemberSubmissionsForWeek(memberId: string, weekId: stri
   return data ?? []
 }
 
+export async function getAllTimeScoreboard() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('weekly_scores')
+    .select('member_id, full_name, total_points')
+
+  if (error) throw error
+
+  // Aggregate per member across all weeks
+  const map = new Map<string, { member_id: string; full_name: string; total_points: number; weeks_participated: number }>()
+  for (const row of data ?? []) {
+    const existing = map.get(row.member_id)
+    if (existing) {
+      existing.total_points += row.total_points
+      existing.weeks_participated += 1
+    } else {
+      map.set(row.member_id, {
+        member_id: row.member_id,
+        full_name: row.full_name,
+        total_points: row.total_points,
+        weeks_participated: 1,
+      })
+    }
+  }
+
+  return Array.from(map.values())
+    .sort((a, b) => b.total_points - a.total_points)
+    .map((entry, i) => ({ ...entry, rank: i + 1 }))
+}
+
 export async function getAllSubmissionsForWeek(weekId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase

@@ -29,6 +29,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
           <nav className="hidden gap-6 sm:flex">
             <Link href="/dashboard" className="text-sm font-medium text-gray-600 hover:text-gray-900">Home</Link>
+            <Link href="/dashboard/scoreboard" className="text-sm font-medium text-gray-600 hover:text-gray-900">Scoreboard</Link>
             <Link href="/dashboard/leaderboard" className="text-sm font-medium text-gray-600 hover:text-gray-900">Leaderboard</Link>
             <Link href="/dashboard/my-scores" className="text-sm font-medium text-gray-600 hover:text-gray-900">My Scores</Link>
           </nav>
@@ -44,10 +45,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
 
         {/* Mobile nav */}
-        <div className="flex gap-4 border-t border-gray-100 px-4 py-2 sm:hidden">
-          <Link href="/dashboard" className="text-sm font-medium text-gray-600">Home</Link>
-          <Link href="/dashboard/leaderboard" className="text-sm font-medium text-gray-600">Leaderboard</Link>
-          <Link href="/dashboard/my-scores" className="text-sm font-medium text-gray-600">My Scores</Link>
+        <div className="flex gap-1 overflow-x-auto border-t border-gray-100 px-3 py-2 sm:hidden">
+          <Link href="/dashboard" className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 active:bg-gray-200">Home</Link>
+          <Link href="/dashboard/scoreboard" className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 active:bg-gray-200">Scoreboard</Link>
+          <Link href="/dashboard/leaderboard" className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 active:bg-gray-200">Leaderboard</Link>
+          <Link href="/dashboard/my-scores" className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 active:bg-gray-200">My Scores</Link>
         </div>
       </header>
 
