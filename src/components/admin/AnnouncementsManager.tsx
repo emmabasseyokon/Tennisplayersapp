@@ -50,9 +50,9 @@ export function AnnouncementsManager({ initialAnnouncements }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Announcements</h1>
-        <Button onClick={openModal}>Add Announcement</Button>
+        <Button onClick={openModal} className="w-full sm:w-auto">Add Announcement</Button>
       </div>
 
       <Card>

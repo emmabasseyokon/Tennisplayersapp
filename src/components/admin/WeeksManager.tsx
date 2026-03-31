@@ -106,9 +106,9 @@ export function WeeksManager({ initialWeeks }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Weeks</h1>
-        <Button onClick={openCreate}>Create Week</Button>
+        <Button onClick={openCreate} className="w-full sm:w-auto">Create Week</Button>
       </div>
 
       {/* Weeks list */}

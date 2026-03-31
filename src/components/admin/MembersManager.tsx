@@ -225,11 +225,11 @@ export function MembersManager({ initialMembers }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Members</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={openImport}>Import CSV</Button>
-          <Button onClick={openCreate}>Add Member</Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button variant="outline" onClick={openImport} className="w-full sm:w-auto">Import Members</Button>
+          <Button onClick={openCreate} className="w-full sm:w-auto">Add Member</Button>
         </div>
       </div>
 
