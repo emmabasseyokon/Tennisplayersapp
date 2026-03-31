@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { createMember, updateMember } from '@/app/admin/members/actions'
+import { createMember, updateMember, toggleMemberRole } from '@/app/admin/members/actions'
 import type { Profile } from '@/types/database.types'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -27,8 +26,6 @@ export function MembersManager({ initialMembers }: Props) {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const supabase = createClient()
 
   function openCreate() {
     setError(null)
@@ -103,14 +100,11 @@ export function MembersManager({ initialMembers }: Props) {
   async function toggleRole(member: Profile) {
     const newRole = member.role === 'admin' ? 'member' : 'admin'
     if (!confirm(`Change ${member.full_name}'s role to ${newRole}?`)) return
-    const { data, error: err } = await supabase
-      .from('profiles')
-      .update({ role: newRole })
-      .eq('id', member.id)
-      .select()
-      .single()
-    if (err) { alert(err.message); return }
-    setMembers(prev => prev.map(m => m.id === member.id ? data as Profile : m))
+    const result = await toggleMemberRole(member.id, member.role)
+    if (result.error) { alert(result.error); return }
+    setMembers(prev => prev.map(m =>
+      m.id === member.id ? { ...m, role: result.newRole as 'admin' | 'member' } : m
+    ))
   }
 
   return (
