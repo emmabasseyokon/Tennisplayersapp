@@ -9,7 +9,6 @@ const NAV = [
   { href: '/admin/weekly-scoreboard', label: 'Weekly Scoreboard' },
   { href: '/admin/weeks', label: 'Weeks' },
   { href: '/admin/members', label: 'Members' },
-  { href: '/admin/announcements', label: 'Announcements' },
 ]
 
 interface Props {

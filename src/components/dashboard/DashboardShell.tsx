@@ -7,7 +7,6 @@ const NAV = [
   { href: '/dashboard', label: 'Home' },
   { href: '/dashboard/scoreboard', label: 'Overall Scoreboard' },
   { href: '/dashboard/leaderboard', label: 'Weekly Scoreboard' },
-  { href: '/dashboard/announcements', label: 'Announcements' },
   { href: '/dashboard/my-scores', label: 'My Scores' },
 ]
 
