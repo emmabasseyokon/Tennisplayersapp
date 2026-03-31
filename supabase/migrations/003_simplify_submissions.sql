@@ -1,11 +1,14 @@
 -- Simplify submissions: remove task dependency, one row per member per week
 -- Run this AFTER 001 and 002.
 
--- 1. Drop the lock trigger (references task_id indirectly via submissions)
+-- 1. Drop the view that depends on submissions (must go first)
+DROP VIEW IF EXISTS public.weekly_scores;
+
+-- 2. Drop the lock trigger
 DROP TRIGGER IF EXISTS submissions_lock_check ON public.submissions;
 DROP FUNCTION IF EXISTS public.check_week_not_locked();
 
--- 2. Drop old submissions (task-based) and recreate simplified
+-- 3. Drop old submissions (task-based) and recreate simplified
 DROP TABLE IF EXISTS public.submissions;
 
 CREATE TABLE public.submissions (
@@ -19,7 +22,7 @@ CREATE TABLE public.submissions (
   UNIQUE (week_id, member_id)
 );
 
--- 3. Recreate lock trigger on simplified table
+-- 4. Recreate lock trigger on simplified table
 CREATE OR REPLACE FUNCTION public.check_week_not_locked()
 RETURNS trigger AS $$
 DECLARE locked boolean;
@@ -36,7 +39,7 @@ CREATE TRIGGER submissions_lock_check
   BEFORE INSERT OR UPDATE ON public.submissions
   FOR EACH ROW EXECUTE FUNCTION public.check_week_not_locked();
 
--- 4. Re-enable RLS
+-- 5. Re-enable RLS
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Members can view own submissions"
@@ -52,10 +55,10 @@ CREATE POLICY "Admins can manage submissions"
   USING (public.is_admin())
   WITH CHECK (public.is_admin());
 
--- 5. Drop tasks table
+-- 6. Drop tasks table
 DROP TABLE IF EXISTS public.tasks;
 
--- 6. Recreate weekly_scores view (no task join needed)
+-- 7. Recreate weekly_scores view (no task join needed)
 DROP VIEW IF EXISTS public.weekly_scores;
 
 CREATE VIEW public.weekly_scores
