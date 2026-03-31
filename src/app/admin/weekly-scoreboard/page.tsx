@@ -2,6 +2,7 @@ import { getWeeks, getLatestWeek } from '@/lib/queries/weeks'
 import { getLeaderboardForWeek } from '@/lib/queries/scores'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { LeaderboardTable } from '@/components/leaderboard/LeaderboardTable'
+import { WeekSelect } from '@/components/ui/WeekSelect'
 
 interface Props {
   searchParams: Promise<{ week?: string }>
@@ -23,22 +24,9 @@ export default async function AdminWeeklyScoreboardPage({ searchParams }: Props)
         <p className="mt-1 text-sm text-gray-500">Per-week rankings. Updates live as scores are recorded.</p>
       </div>
 
-      {/* Week selector */}
-      <div className="flex flex-wrap gap-1.5">
-        {weeks.map(w => (
-          <a
-            key={w.id}
-            href={`/admin/weekly-scoreboard?week=${w.id}`}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors sm:px-4 sm:py-1.5 sm:text-sm ${
-              w.id === activeWeek?.id
-                ? 'bg-blue-700 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            {w.label}
-          </a>
-        ))}
-      </div>
+      {weeks.length > 0 && activeWeekId && (
+        <WeekSelect weeks={weeks} activeWeekId={activeWeekId} basePath="/admin/weekly-scoreboard" />
+      )}
 
       <Card>
         <CardHeader>

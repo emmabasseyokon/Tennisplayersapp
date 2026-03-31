@@ -113,6 +113,21 @@ export async function toggleMemberRole(userId: string, currentRole: string) {
   return { success: true, newRole }
 }
 
+export async function deleteMember(userId: string) {
+  const { error: authErr } = await verifyAdmin()
+  if (authErr) return { error: authErr }
+
+  if (!UUID_RE.test(userId)) return { error: 'Invalid user ID.' }
+
+  const adminClient = createAdminClient()
+
+  // Delete the auth user — the profile row is cascade-deleted via FK
+  const { error } = await adminClient.auth.admin.deleteUser(userId)
+  if (error) return { error: error.message }
+
+  return { success: true }
+}
+
 export type ImportResult = {
   full_name: string
   email: string

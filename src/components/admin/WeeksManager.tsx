@@ -16,6 +16,7 @@ export function WeeksManager({ initialWeeks }: Props) {
   const [weeks, setWeeks] = useState<Week[]>(initialWeeks)
   const [createOpen, setCreateOpen] = useState(false)
   const [editWeek, setEditWeek] = useState<Week | null>(null)
+  const [deleteWeek, setDeleteWeek] = useState<Week | null>(null)
   const [form, setForm] = useState<WeekForm>({ label: '', start_date: '', end_date: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,6 +44,8 @@ export function WeeksManager({ initialWeeks }: Props) {
   function closeModals() {
     setCreateOpen(false)
     setEditWeek(null)
+    setDeleteWeek(null)
+    setLockWeek(null)
     setError(null)
   }
 
@@ -78,19 +81,31 @@ export function WeeksManager({ initialWeeks }: Props) {
     closeModals()
   }
 
-  async function toggleLock(week: Week) {
-    if (!confirm(week.is_locked
-      ? `Unlock "${week.label}"? Submissions can be edited.`
-      : `Lock "${week.label}"? No more changes can be made.`
-    )) return
+  const [lockWeek, setLockWeek] = useState<Week | null>(null)
+
+  async function handleToggleLock() {
+    if (!lockWeek) return
+    setLoading(true)
     const { data, error: err } = await supabase
       .from('weeks')
-      .update({ is_locked: !week.is_locked })
-      .eq('id', week.id)
+      .update({ is_locked: !lockWeek.is_locked })
+      .eq('id', lockWeek.id)
       .select()
       .single()
-    if (err) { alert(err.message); return }
-    setWeeks(prev => prev.map(w => w.id === week.id ? data as Week : w))
+    if (err) { setError(err.message); setLoading(false); return }
+    setWeeks(prev => prev.map(w => w.id === lockWeek.id ? data as Week : w))
+    setLoading(false)
+    setLockWeek(null)
+  }
+
+  async function handleDeleteWeek() {
+    if (!deleteWeek) return
+    setLoading(true)
+    const { error: err } = await supabase.from('weeks').delete().eq('id', deleteWeek.id)
+    if (err) { setError(err.message); setLoading(false); return }
+    setWeeks(prev => prev.filter(w => w.id !== deleteWeek.id))
+    setLoading(false)
+    setDeleteWeek(null)
   }
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
@@ -146,9 +161,10 @@ export function WeeksManager({ initialWeeks }: Props) {
                     <button onClick={() => openEdit(week)} className="text-xs text-gray-500 hover:text-blue-600 hover:underline">
                       Edit
                     </button>
-                    <button onClick={() => toggleLock(week)} className="text-xs text-gray-500 hover:underline">
+                    <button onClick={() => setLockWeek(week)} className="text-xs text-gray-500 hover:underline">
                       {week.is_locked ? 'Unlock' : 'Lock'}
                     </button>
+                    <button onClick={() => setDeleteWeek(week)} className="text-xs text-red-500 hover:text-red-700 hover:underline">Delete</button>
                   </div>
 
                   {/* Mobile actions — 3-dot kebab menu */}
@@ -180,10 +196,16 @@ export function WeeksManager({ initialWeeks }: Props) {
                           Edit
                         </button>
                         <button
-                          onClick={() => { setOpenDropdown(null); toggleLock(week) }}
+                          onClick={() => { setOpenDropdown(null); setLockWeek(week) }}
                           className="block w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
                         >
                           {week.is_locked ? 'Unlock' : 'Lock'}
+                        </button>
+                        <button
+                          onClick={() => { setOpenDropdown(null); setDeleteWeek(week) }}
+                          className="block w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50"
+                        >
+                          Delete
                         </button>
                       </div>
                     )}
@@ -194,6 +216,76 @@ export function WeeksManager({ initialWeeks }: Props) {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete confirmation modal */}
+      {deleteWeek && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Delete Week</h2>
+              <button onClick={() => setDeleteWeek(null)} className="text-gray-400 hover:text-gray-600" aria-label="Close">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+            <p className="mb-1 text-sm text-gray-700">
+              Are you sure you want to delete <span className="font-semibold">&ldquo;{deleteWeek.label}&rdquo;</span>?
+            </p>
+            <p className="mb-6 text-xs text-red-600">This will permanently remove the week and all its scores.</p>
+            <div className="flex gap-3">
+              <Button onClick={handleDeleteWeek} loading={loading} className="flex-1 !bg-red-600 hover:!bg-red-700">
+                Delete
+              </Button>
+              <button
+                type="button"
+                onClick={() => setDeleteWeek(null)}
+                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lock/Unlock confirmation modal */}
+      {lockWeek && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {lockWeek.is_locked ? 'Unlock Week' : 'Lock Week'}
+              </h2>
+              <button onClick={() => setLockWeek(null)} className="text-gray-400 hover:text-gray-600" aria-label="Close">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+            <p className="mb-6 text-sm text-gray-700">
+              {lockWeek.is_locked
+                ? <>Unlock <span className="font-semibold">&ldquo;{lockWeek.label}&rdquo;</span>? Submissions will be editable again.</>
+                : <>Lock <span className="font-semibold">&ldquo;{lockWeek.label}&rdquo;</span>? No more changes can be made to scores.</>
+              }
+            </p>
+            <div className="flex gap-3">
+              <Button onClick={handleToggleLock} loading={loading} className="flex-1">
+                {lockWeek.is_locked ? 'Unlock' : 'Lock'}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setLockWeek(null)}
+                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal — shared for create and edit */}
       {modalOpen && (

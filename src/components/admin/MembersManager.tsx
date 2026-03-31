@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { createMember, updateMember, toggleMemberRole, importMembers } from '@/app/admin/members/actions'
+import { createMember, updateMember, toggleMemberRole, deleteMember, importMembers } from '@/app/admin/members/actions'
 import type { ImportResult } from '@/app/admin/members/actions'
 import type { Profile } from '@/types/database.types'
 import { Button } from '@/components/ui/Button'
@@ -106,6 +106,11 @@ export function MembersManager({ initialMembers }: Props) {
   const [importResults, setImportResults] = useState<ImportResult[] | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Delete modal
+  const [deletingMember, setDeletingMember] = useState<Profile | null>(null)
+  // Role toggle modal
+  const [roleMember, setRoleMember] = useState<Profile | null>(null)
+
   const [loading, setLoading]       = useState(false)
   const [error, setError]           = useState<string | null>(null)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
@@ -140,7 +145,7 @@ export function MembersManager({ initialMembers }: Props) {
   function closeModals() {
     setCreateOpen(false); setEditMember(null); setImportOpen(false)
     setImportResults(null); setImportRows([]); setParseError(null)
-    setError(null)
+    setDeletingMember(null); setRoleMember(null); setError(null)
   }
 
   // ── File parsing ─────────────────────────────────────────────────────────────
@@ -206,14 +211,26 @@ export function MembersManager({ initialMembers }: Props) {
     }
   }
 
-  async function toggleRole(member: Profile) {
-    const newRole = member.role === 'admin' ? 'member' : 'admin'
-    if (!confirm(`Change ${member.full_name}'s role to ${newRole}?`)) return
-    const result = await toggleMemberRole(member.id, member.role)
-    if (result.error) { alert(result.error); return }
+  async function handleToggleRole() {
+    if (!roleMember) return
+    setLoading(true)
+    const result = await toggleMemberRole(roleMember.id, roleMember.role)
+    if (result.error) { setError(result.error); setLoading(false); return }
     setMembers(prev => prev.map(m =>
-      m.id === member.id ? { ...m, role: result.newRole as 'admin' | 'member' } : m
+      m.id === roleMember.id ? { ...m, role: result.newRole as 'admin' | 'member' } : m
     ))
+    setLoading(false)
+    setRoleMember(null)
+  }
+
+  async function handleDelete() {
+    if (!deletingMember) return
+    setLoading(true)
+    const result = await deleteMember(deletingMember.id)
+    if (result.error) { setError(result.error); setLoading(false); return }
+    setMembers(prev => prev.filter(m => m.id !== deletingMember.id))
+    setLoading(false)
+    setDeletingMember(null)
   }
 
   // ── Derived ───────────────────────────────────────────────────────────────────
@@ -255,9 +272,10 @@ export function MembersManager({ initialMembers }: Props) {
                   {/* Desktop actions — text links */}
                   <div className="hidden items-center gap-3 sm:flex">
                     <button onClick={() => openEdit(member)} className="text-xs text-gray-500 hover:text-blue-600 hover:underline">Edit</button>
-                    <button onClick={() => toggleRole(member)} className="text-xs text-gray-500 hover:text-blue-600 hover:underline">
+                    <button onClick={() => setRoleMember(member)} className="text-xs text-gray-500 hover:text-blue-600 hover:underline">
                       {member.role === 'admin' ? 'Remove admin' : 'Make admin'}
                     </button>
+                    <button onClick={() => setDeletingMember(member)} className="text-xs text-red-500 hover:text-red-700 hover:underline">Delete</button>
                   </div>
 
                   {/* Mobile actions — 3-dot kebab menu */}
@@ -280,10 +298,16 @@ export function MembersManager({ initialMembers }: Props) {
                           Edit
                         </button>
                         <button
-                          onClick={() => { setOpenDropdown(null); toggleRole(member) }}
+                          onClick={() => { setOpenDropdown(null); setRoleMember(member) }}
                           className="block w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
                         >
                           {member.role === 'admin' ? 'Remove admin' : 'Make admin'}
+                        </button>
+                        <button
+                          onClick={() => { setOpenDropdown(null); setDeletingMember(member) }}
+                          className="block w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50"
+                        >
+                          Delete
                         </button>
                       </div>
                     )}
@@ -294,6 +318,61 @@ export function MembersManager({ initialMembers }: Props) {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Delete confirmation modal ────────────────────────────────────────── */}
+      {deletingMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <ModalHeader title="Delete Member" onClose={() => setDeletingMember(null)} />
+            {error && <ErrorBanner msg={error} />}
+            <p className="mb-1 text-sm text-gray-700">
+              Are you sure you want to delete <span className="font-semibold">{deletingMember.full_name}</span>?
+            </p>
+            <p className="mb-6 text-xs text-red-600">This will permanently remove their account and all their data.</p>
+            <div className="flex gap-3">
+              <Button onClick={handleDelete} loading={loading} className="flex-1 !bg-red-600 hover:!bg-red-700">
+                Delete
+              </Button>
+              <button
+                type="button"
+                onClick={() => setDeletingMember(null)}
+                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Role toggle confirmation modal ─────────────────────────────────────── */}
+      {roleMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <ModalHeader
+              title={roleMember.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+              onClose={() => setRoleMember(null)}
+            />
+            {error && <ErrorBanner msg={error} />}
+            <p className="mb-6 text-sm text-gray-700">
+              Change <span className="font-semibold">{roleMember.full_name}</span>&apos;s role to{' '}
+              <span className="font-semibold">{roleMember.role === 'admin' ? 'member' : 'admin'}</span>?
+            </p>
+            <div className="flex gap-3">
+              <Button onClick={handleToggleRole} loading={loading} className="flex-1">
+                {roleMember.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setRoleMember(null)}
+                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Create modal ─────────────────────────────────────────────────────── */}
       {createOpen && (
