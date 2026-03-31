@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Week } from '@/types/database.types'
 import { Button } from '@/components/ui/Button'
@@ -93,6 +93,15 @@ export function WeeksManager({ initialWeeks }: Props) {
     setWeeks(prev => prev.map(w => w.id === week.id ? data as Week : w))
   }
 
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!openDropdown) return
+    function handleClick() { setOpenDropdown(null) }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [openDropdown])
+
   const modalOpen = createOpen || !!editWeek
 
   return (
@@ -111,21 +120,24 @@ export function WeeksManager({ initialWeeks }: Props) {
           ) : (
             <ul className="divide-y divide-gray-100">
               {weeks.map(week => (
-                <li key={week.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4">
+                <li key={week.id} className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+                  {/* Week info */}
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-800">{week.label}</span>
-                      <Badge variant={week.is_locked ? 'danger' : 'success'}>
-                        {week.is_locked ? 'Locked' : 'Open'}
-                      </Badge>
-                    </div>
+                    <span className="font-medium text-gray-800">{week.label}</span>
                     <p className="mt-0.5 text-xs text-gray-500">
                       {new Date(week.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       {' – '}
                       {new Date(week.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
+                    <div className="mt-1">
+                      <Badge variant={week.is_locked ? 'danger' : 'success'}>
+                        {week.is_locked ? 'Locked' : 'Open'}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
+
+                  {/* Desktop actions — text links */}
+                  <div className="hidden items-center gap-3 sm:flex">
                     {!week.is_locked && (
                       <Link href={`/admin/record/${week.id}`} className="text-xs font-medium text-blue-600 hover:underline">
                         Record Scores
@@ -137,6 +149,44 @@ export function WeeksManager({ initialWeeks }: Props) {
                     <button onClick={() => toggleLock(week)} className="text-xs text-gray-500 hover:underline">
                       {week.is_locked ? 'Unlock' : 'Lock'}
                     </button>
+                  </div>
+
+                  {/* Mobile actions — 3-dot kebab menu */}
+                  <div className="relative sm:hidden">
+                    <button
+                      onClick={e => { e.stopPropagation(); setOpenDropdown(openDropdown === week.id ? null : week.id) }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                      aria-label="Options"
+                    >
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
+                      </svg>
+                    </button>
+                    {openDropdown === week.id && (
+                      <div className="absolute right-0 top-9 z-10 min-w-[150px] rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
+                        {!week.is_locked && (
+                          <Link
+                            href={`/admin/record/${week.id}`}
+                            onClick={() => setOpenDropdown(null)}
+                            className="block px-4 py-2.5 text-sm font-medium text-blue-600 hover:bg-gray-50"
+                          >
+                            Record Scores
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => { setOpenDropdown(null); openEdit(week) }}
+                          className="block w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => { setOpenDropdown(null); toggleLock(week) }}
+                          className="block w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          {week.is_locked ? 'Unlock' : 'Lock'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </li>
               ))}

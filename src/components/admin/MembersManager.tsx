@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createMember, updateMember, toggleMemberRole, importMembers } from '@/app/admin/members/actions'
 import type { ImportResult } from '@/app/admin/members/actions'
 import type { Profile } from '@/types/database.types'
@@ -106,8 +106,17 @@ export function MembersManager({ initialMembers }: Props) {
   const [importResults, setImportResults] = useState<ImportResult[] | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState<string | null>(null)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!openDropdown) return
+    function handleClick() { setOpenDropdown(null) }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [openDropdown])
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -234,18 +243,50 @@ export function MembersManager({ initialMembers }: Props) {
             <ul className="divide-y divide-gray-100">
               {members.map(member => (
                 <li key={member.id} className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+                  {/* Member info */}
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-800">{member.full_name}</span>
+                    <span className="font-medium text-gray-800">{member.full_name}</span>
+                    <p className="mt-0.5 text-xs text-gray-500">{member.email}</p>
+                    <div className="mt-1">
                       <Badge variant={member.role === 'admin' ? 'warning' : 'default'}>{member.role}</Badge>
                     </div>
-                    <p className="mt-0.5 text-xs text-gray-500">{member.email}</p>
                   </div>
-                  <div className="flex items-center gap-3">
+
+                  {/* Desktop actions — text links */}
+                  <div className="hidden items-center gap-3 sm:flex">
                     <button onClick={() => openEdit(member)} className="text-xs text-gray-500 hover:text-blue-600 hover:underline">Edit</button>
                     <button onClick={() => toggleRole(member)} className="text-xs text-gray-500 hover:text-blue-600 hover:underline">
                       {member.role === 'admin' ? 'Remove admin' : 'Make admin'}
                     </button>
+                  </div>
+
+                  {/* Mobile actions — 3-dot kebab menu */}
+                  <div className="relative sm:hidden">
+                    <button
+                      onClick={e => { e.stopPropagation(); setOpenDropdown(openDropdown === member.id ? null : member.id) }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                      aria-label="Options"
+                    >
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
+                      </svg>
+                    </button>
+                    {openDropdown === member.id && (
+                      <div className="absolute right-0 top-9 z-10 min-w-[150px] rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
+                        <button
+                          onClick={() => { setOpenDropdown(null); openEdit(member) }}
+                          className="block w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => { setOpenDropdown(null); toggleRole(member) }}
+                          className="block w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          {member.role === 'admin' ? 'Remove admin' : 'Make admin'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </li>
               ))}
