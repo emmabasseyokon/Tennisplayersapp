@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 
-interface Props { initialMembers: Profile[] }
+interface Props { initialMembers: Profile[]; autoCreate?: boolean }
 
 // ── CSV parsing ───────────────────────────────────────────────────────────────
 
@@ -83,11 +83,11 @@ function downloadCredentials(results: ImportResult[]) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function MembersManager({ initialMembers }: Props) {
+export function MembersManager({ initialMembers, autoCreate }: Props) {
   const [members, setMembers] = useState<Profile[]>(initialMembers)
 
   // Create modal
-  const [createOpen, setCreateOpen]     = useState(false)
+  const [createOpen, setCreateOpen]     = useState(autoCreate ?? false)
   const [inviteEmail, setInviteEmail]   = useState('')
   const [inviteName, setInviteName]     = useState('')
   const [invitePassword, setInvitePassword] = useState('')

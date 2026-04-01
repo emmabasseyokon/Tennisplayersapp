@@ -8,13 +8,13 @@ import { Badge } from '@/components/ui/Badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import Link from 'next/link'
 
-interface Props { initialWeeks: Week[] }
+interface Props { initialWeeks: Week[]; autoCreate?: boolean }
 
 type WeekForm = { label: string; start_date: string; end_date: string }
 
-export function WeeksManager({ initialWeeks }: Props) {
+export function WeeksManager({ initialWeeks, autoCreate }: Props) {
   const [weeks, setWeeks] = useState<Week[]>(initialWeeks)
-  const [createOpen, setCreateOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(autoCreate ?? false)
   const [editWeek, setEditWeek] = useState<Week | null>(null)
   const [deleteWeek, setDeleteWeek] = useState<Week | null>(null)
   const [form, setForm] = useState<WeekForm>({ label: '', start_date: '', end_date: '' })
