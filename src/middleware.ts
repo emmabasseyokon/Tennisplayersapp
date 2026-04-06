@@ -29,21 +29,14 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  // Redirect unauthenticated users trying to access protected routes
-  if (!user && (pathname.startsWith('/dashboard') || pathname.startsWith('/admin'))) {
+  // Redirect unauthenticated users trying to access admin routes
+  if (!user && pathname.startsWith('/admin')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // Redirect authenticated users away from login
   if (user && pathname === '/login') {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    const target = profile?.role === 'admin' ? '/admin' : '/dashboard'
-    return NextResponse.redirect(new URL(target, request.url))
+    return NextResponse.redirect(new URL('/admin', request.url))
   }
 
   // Guard admin routes — only admins allowed
@@ -55,7 +48,8 @@ export async function middleware(request: NextRequest) {
       .single()
 
     if (profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      // Not an admin — sign them out and redirect to login
+      return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
@@ -63,5 +57,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/login'],
+  matcher: ['/admin/:path*', '/login'],
 }

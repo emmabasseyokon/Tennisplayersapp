@@ -1,10 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Profile } from '@/types/database.types'
+import type { Member } from '@/types/database.types'
 
-export async function getMembers(): Promise<Profile[]> {
+export async function getMembers(): Promise<Member[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from('profiles')
+    .from('members')
     .select('*')
     .order('full_name')
 
@@ -12,10 +12,10 @@ export async function getMembers(): Promise<Profile[]> {
   return data ?? []
 }
 
-export async function getProfile(id: string): Promise<Profile | null> {
+export async function getMember(id: string): Promise<Member | null> {
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from('profiles')
+    .from('members')
     .select('*')
     .eq('id', id)
     .single()

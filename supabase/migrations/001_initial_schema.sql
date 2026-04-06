@@ -2,12 +2,12 @@
 -- God's Men of Valor (GMOV) — Full Schema
 -- ============================================================
 
--- ── Profiles (extends auth.users) ───────────────────────────
+-- ── Profiles (admin users only, extends auth.users) ─────────
 CREATE TABLE public.profiles (
   id          uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name   text NOT NULL,
   email       text NOT NULL,
-  role        text NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'member')),
+  role        text NOT NULL DEFAULT 'admin' CHECK (role IN ('admin')),
   avatar_url  text,
   created_at  timestamptz DEFAULT now()
 );
@@ -31,6 +31,14 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 
+-- ── Members (standalone, no auth account needed) ────────────
+CREATE TABLE public.members (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name   text NOT NULL,
+  created_at  timestamptz DEFAULT now()
+);
+
+
 -- ── Weeks ────────────────────────────────────────────────────
 CREATE TABLE public.weeks (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -47,7 +55,7 @@ CREATE TABLE public.weeks (
 CREATE TABLE public.submissions (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   week_id     uuid NOT NULL REFERENCES public.weeks(id) ON DELETE CASCADE,
-  member_id   uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  member_id   uuid NOT NULL REFERENCES public.members(id) ON DELETE CASCADE,
   points      integer NOT NULL CHECK (points >= 0),
   note        text,
   recorded_by uuid REFERENCES public.profiles(id),
@@ -82,12 +90,12 @@ SELECT
   w.label      AS week_label,
   w.start_date,
   s.member_id,
-  p.full_name,
+  m.full_name,
   s.points     AS total_points,
   RANK() OVER (PARTITION BY s.week_id ORDER BY s.points DESC) AS rank
 FROM public.submissions s
-JOIN public.profiles p ON p.id = s.member_id
-JOIN public.weeks w    ON w.id = s.week_id;
+JOIN public.members m ON m.id = s.member_id
+JOIN public.weeks w   ON w.id = s.week_id;
 
 
 -- ============================================================
@@ -95,6 +103,7 @@ JOIN public.weeks w    ON w.id = s.week_id;
 -- ============================================================
 
 ALTER TABLE public.profiles    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.members     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.weeks       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 
@@ -109,23 +118,30 @@ $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 
 -- ── profiles policies ────────────────────────────────────────
-CREATE POLICY "Members can view all profiles"
+CREATE POLICY "Admins can view all profiles"
   ON public.profiles FOR SELECT
-  USING (auth.uid() IS NOT NULL);
+  USING (public.is_admin());
 
-CREATE POLICY "Members can update own profile"
-  ON public.profiles FOR UPDATE
-  USING (id = auth.uid());
-
-CREATE POLICY "Admins can update any profile"
+CREATE POLICY "Admins can update profiles"
   ON public.profiles FOR UPDATE
   USING (public.is_admin());
 
 
+-- ── members policies ─────────────────────────────────────────
+CREATE POLICY "Admins can view all members"
+  ON public.members FOR SELECT
+  USING (public.is_admin());
+
+CREATE POLICY "Admins can manage members"
+  ON public.members FOR ALL
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+
 -- ── weeks policies ───────────────────────────────────────────
-CREATE POLICY "Anyone authenticated can view weeks"
+CREATE POLICY "Admins can view weeks"
   ON public.weeks FOR SELECT
-  USING (auth.uid() IS NOT NULL);
+  USING (public.is_admin());
 
 CREATE POLICY "Admins can manage weeks"
   ON public.weeks FOR ALL
@@ -134,10 +150,6 @@ CREATE POLICY "Admins can manage weeks"
 
 
 -- ── submissions policies ─────────────────────────────────────
-CREATE POLICY "Members can view all submissions"
-  ON public.submissions FOR SELECT
-  USING (auth.uid() IS NOT NULL);
-
 CREATE POLICY "Admins can view all submissions"
   ON public.submissions FOR SELECT
   USING (public.is_admin());

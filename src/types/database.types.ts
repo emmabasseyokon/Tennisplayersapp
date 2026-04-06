@@ -8,7 +8,7 @@ export interface Database {
           id: string
           full_name: string
           email: string
-          role: 'admin' | 'member'
+          role: 'admin'
           avatar_url: string | null
           created_at: string
         }
@@ -16,7 +16,7 @@ export interface Database {
           id: string
           full_name: string
           email: string
-          role?: 'admin' | 'member'
+          role?: 'admin'
           avatar_url?: string | null
           created_at?: string
         }
@@ -24,8 +24,25 @@ export interface Database {
           id?: string
           full_name?: string
           email?: string
-          role?: 'admin' | 'member'
+          role?: 'admin'
           avatar_url?: string | null
+        }
+        Relationships: []
+      }
+      members: {
+        Row: {
+          id: string
+          full_name: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          full_name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          full_name?: string
         }
         Relationships: []
       }
@@ -80,27 +97,6 @@ export interface Database {
         }
         Relationships: []
       }
-      announcements: {
-        Row: {
-          id: string
-          title: string
-          body: string
-          created_by: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          body: string
-          created_by?: string | null
-          created_at?: string
-        }
-        Update: {
-          title?: string
-          body?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       weekly_scores: {
@@ -128,7 +124,7 @@ export interface Database {
 }
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
+export type Member = Database['public']['Tables']['members']['Row']
 export type Week = Database['public']['Tables']['weeks']['Row']
 export type Submission = Database['public']['Tables']['submissions']['Row']
-export type Announcement = Database['public']['Tables']['announcements']['Row']
 export type WeeklyScore = Database['public']['Views']['weekly_scores']['Row']

@@ -3,14 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import type { Week, Profile, Submission } from '@/types/database.types'
+import type { Week, Member, Submission } from '@/types/database.types'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 
 interface Props {
   week: Week
-  members: Profile[]
+  members: Member[]
   initialSubmissions: Submission[]
 }
 

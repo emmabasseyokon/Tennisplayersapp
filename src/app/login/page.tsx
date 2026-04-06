@@ -29,13 +29,7 @@ export default function LoginPage() {
     // Fetch role and redirect
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-      router.push(profile?.role === 'admin' ? '/admin' : '/dashboard')
+      router.push('/admin')
       router.refresh()
     }
   }
@@ -51,7 +45,7 @@ export default function LoginPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-white">God&apos;s Men of Valor</h1>
-          <p className="mt-1 text-sm text-blue-200">Member Portal</p>
+          <p className="mt-1 text-sm text-blue-200">Admin Portal</p>
         </div>
 
         {/* Card */}
