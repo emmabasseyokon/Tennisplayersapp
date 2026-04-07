@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { createMember, updateMember, deleteMember, importMembers } from '@/app/admin/members/actions'
 import type { ImportResult } from '@/app/admin/members/actions'
-import type { Member, Week } from '@/types/database.types'
+import type { Member } from '@/types/database.types'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 
-interface Props { initialMembers: Member[]; weeks: Week[]; autoCreate?: boolean }
+interface Props { initialMembers: Member[]; autoCreate?: boolean }
 
 // ── CSV parsing ───────────────────────────────────────────────────────────────
 
@@ -61,7 +61,7 @@ function parseCSV(text: string): { rows: ParsedRow[]; error?: string } {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function MembersManager({ initialMembers, weeks, autoCreate }: Props) {
+export function MembersManager({ initialMembers, autoCreate }: Props) {
   const [members, setMembers] = useState<Member[]>(initialMembers)
 
   // Create modal
@@ -78,7 +78,6 @@ export function MembersManager({ initialMembers, weeks, autoCreate }: Props) {
   const [parseError, setParseError]       = useState<string | null>(null)
   const [importing, setImporting]         = useState(false)
   const [importResults, setImportResults] = useState<ImportResult[] | null>(null)
-  const [selectedWeekIds, setSelectedWeekIds] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Delete modal
@@ -109,7 +108,7 @@ export function MembersManager({ initialMembers, weeks, autoCreate }: Props) {
   }
 
   function openImport() {
-    setParseError(null); setImportRows([]); setImportResults(null); setSelectedWeekIds([])
+    setParseError(null); setImportRows([]); setImportResults(null)
     setImportOpen(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -166,10 +165,7 @@ export function MembersManager({ initialMembers, weeks, autoCreate }: Props) {
     const validRows = importRows.filter(r => !r.error)
     if (validRows.length === 0) return
     setImporting(true)
-    const res = await importMembers(
-      validRows.map(r => ({ full_name: r.full_name, points: r.points })),
-      selectedWeekIds.length > 0 ? selectedWeekIds : undefined
-    )
+    const res = await importMembers(validRows.map(r => ({ full_name: r.full_name, points: r.points })))
     setImporting(false)
     if ('error' in res) { setParseError(res.error); return }
     setImportResults(res.results)
@@ -334,35 +330,8 @@ export function MembersManager({ initialMembers, weeks, autoCreate }: Props) {
             <div className="mb-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
               <p className="font-medium">Required CSV columns:</p>
               <p className="mt-1 font-mono text-xs">name, points</p>
-              <p className="mt-1 text-xs text-blue-600">Members will be created and their points recorded for the selected week(s).</p>
+              <p className="mt-1 text-xs text-blue-600">Members will be created with their names and points.</p>
             </div>
-
-            {/* Week multi-select */}
-            {weeks.length > 0 && (
-              <div className="mb-4">
-                <label className="mb-1 block text-sm font-medium text-gray-700">Assign scores to week(s)</label>
-                <div className="max-h-36 overflow-y-auto rounded-lg border border-gray-300 bg-white">
-                  {weeks.map(w => (
-                    <label key={w.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-gray-50">
-                      <input
-                        type="checkbox"
-                        checked={selectedWeekIds.includes(w.id)}
-                        onChange={e => {
-                          if (e.target.checked) setSelectedWeekIds(prev => [...prev, w.id])
-                          else setSelectedWeekIds(prev => prev.filter(id => id !== w.id))
-                        }}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-700">{w.label}</span>
-                      {w.is_locked && <span className="text-xs text-amber-600">(locked)</span>}
-                    </label>
-                  ))}
-                </div>
-                {selectedWeekIds.length === 0 && (
-                  <p className="mt-1 text-xs text-gray-500">No weeks selected — members will be created without scores.</p>
-                )}
-              </div>
-            )}
 
             <label className="mb-4 flex cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed border-gray-300 p-4 hover:border-blue-400">
               <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

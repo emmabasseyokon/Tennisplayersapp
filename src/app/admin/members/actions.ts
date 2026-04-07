@@ -81,8 +81,7 @@ export type ImportResult = {
 }
 
 export async function importMembers(
-  rows: { full_name: string; points: number }[],
-  weekIds?: string[]
+  rows: { full_name: string; points: number }[]
 ): Promise<{ error: string } | { results: ImportResult[] }> {
   const { error: authErr, supabase } = await verifyAdmin()
   if (authErr || !supabase) return { error: authErr ?? 'Not authorized' }
@@ -110,23 +109,6 @@ export async function importMembers(
     if (error) {
       results.push({ full_name, points, status: 'error', reason: error.message })
       continue
-    }
-
-    // Record the imported points as submissions for all selected weeks
-    if (weekIds && weekIds.length > 0) {
-      const submissions = weekIds.map(wId => ({
-        week_id: wId,
-        member_id: data.id,
-        points,
-      }))
-      const { error: subErr } = await supabase
-        .from('submissions')
-        .insert(submissions)
-
-      if (subErr) {
-        results.push({ full_name, points, status: 'error', reason: `Member created but score failed: ${subErr.message}`, memberId: data.id })
-        continue
-      }
     }
 
     results.push({ full_name, points, status: 'success', reason: '', memberId: data.id })

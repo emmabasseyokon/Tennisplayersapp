@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { getPublicLeaderboardForWeek, getPublicWeeks, getPublicLatestWeek } from '@/lib/queries/public-scores'
 import { WeekSelect } from '@/components/ui/WeekSelect'
 
-const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 interface Props {
   searchParams: Promise<{ week?: string }>
@@ -58,14 +57,12 @@ export default async function PublicWeeklyScoreboardPage({ searchParams }: Props
             <tbody className="divide-y divide-white/5">
               {scores.map(score => (
                 <tr key={score.member_id} className="hover:bg-white/5">
-                  <td className="px-4 py-3 text-lg text-white">
-                    {MEDAL[score.rank] ?? <span className="text-sm text-blue-300">#{score.rank}</span>}
+                  <td className="px-4 py-3 text-sm font-bold text-white">
+                    #{score.rank}
                   </td>
                   <td className="px-4 py-3 font-medium text-white">{score.full_name}</td>
-                  <td className="px-4 py-3 text-right">
-                    <span className="inline-block rounded-full bg-blue-500/30 px-2.5 py-0.5 text-xs font-semibold text-blue-100">
-                      {score.total_points} pts
-                    </span>
+                  <td className="px-4 py-3 text-right text-sm font-bold uppercase text-white">
+                    {score.total_points} points
                   </td>
                 </tr>
               ))}

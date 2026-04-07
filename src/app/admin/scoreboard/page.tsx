@@ -1,8 +1,6 @@
 import { getAllTimeScoreboard } from '@/lib/queries/scores'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
-
-const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
+import { ShareButton } from '@/components/ui/ShareButton'
 
 export default async function AdminScoreboardPage() {
   const scoreboard = await getAllTimeScoreboard()
@@ -10,9 +8,12 @@ export default async function AdminScoreboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Scoreboard</h1>
-        <p className="mt-1 text-sm text-gray-500">All-time rankings based on total points earned.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Scoreboard</h1>
+          <p className="mt-1 text-sm text-gray-500">All-time rankings based on total points earned.</p>
+        </div>
+        <ShareButton url={`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/scores`} title="GMOV Overall Scoreboard" text="Check out the GMOV overall scoreboard!" />
       </div>
 
       {scoreboard.length === 0 ? (
@@ -32,10 +33,9 @@ export default async function AdminScoreboardPage() {
                   className={`text-center ${entry.rank === 1 ? 'border-yellow-300 bg-yellow-50 ring-2 ring-yellow-300' : entry.rank === 2 ? 'border-gray-300 bg-gray-50' : 'border-orange-200 bg-orange-50'}`}
                 >
                   <CardContent className="py-6">
-                    <div className="text-4xl">{MEDAL[entry.rank]}</div>
+                    <div className="text-2xl font-extrabold text-gray-900">#{entry.rank}</div>
                     <p className="mt-2 text-lg font-bold text-gray-900">{entry.full_name}</p>
-                    <p className="mt-1 text-3xl font-extrabold text-blue-700">{entry.total_points}</p>
-                    <p className="text-xs text-gray-500">points</p>
+                    <p className="mt-1 text-3xl font-extrabold text-gray-900">{entry.total_points} <span className="text-sm font-bold uppercase">points</span></p>
                     <p className="mt-2 text-xs text-gray-400">{entry.weeks_participated} week{entry.weeks_participated !== 1 ? 's' : ''}</p>
                   </CardContent>
                 </Card>
@@ -62,13 +62,13 @@ export default async function AdminScoreboardPage() {
                   <tbody className="divide-y divide-gray-100">
                     {scoreboard.map(entry => (
                       <tr key={entry.member_id} className={`hover:bg-gray-50 ${entry.rank <= 3 ? 'font-medium' : ''}`}>
-                        <td className="px-3 py-3 text-lg sm:px-6">
-                          {MEDAL[entry.rank] ?? <span className="text-sm text-gray-500">#{entry.rank}</span>}
+                        <td className="px-3 py-3 text-sm font-bold text-gray-900 sm:px-6">
+                          #{entry.rank}
                         </td>
                         <td className="px-3 py-3 text-gray-800 sm:px-6">{entry.full_name}</td>
                         <td className="px-3 py-3 text-center text-gray-500 sm:px-6">{entry.weeks_participated}</td>
-                        <td className="px-3 py-3 text-right sm:px-6">
-                          <Badge variant="info">{entry.total_points} pts</Badge>
+                        <td className="px-3 py-3 text-right text-sm font-bold uppercase text-gray-900 sm:px-6">
+                          {entry.total_points} points
                         </td>
                       </tr>
                     ))}

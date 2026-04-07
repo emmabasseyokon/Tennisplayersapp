@@ -3,6 +3,7 @@ import { getLeaderboardForWeek } from '@/lib/queries/scores'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { LeaderboardTable } from '@/components/leaderboard/LeaderboardTable'
 import { WeekSelect } from '@/components/ui/WeekSelect'
+import { ShareButton } from '@/components/ui/ShareButton'
 
 interface Props {
   searchParams: Promise<{ week?: string }>
@@ -19,9 +20,16 @@ export default async function AdminWeeklyScoreboardPage({ searchParams }: Props)
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Weekly Scoreboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Per-week rankings. Updates live as scores are recorded.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Weekly Scoreboard</h1>
+          <p className="mt-1 text-sm text-gray-500">Per-week rankings. Updates live as scores are recorded.</p>
+        </div>
+        <ShareButton
+          url={`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/scores/weekly${activeWeekId ? `?week=${activeWeekId}` : ''}`}
+          title="GMOV Weekly Scoreboard"
+          text={`Check out the GMOV weekly scoreboard${activeWeek ? ` — ${activeWeek.label}` : ''}!`}
+        />
       </div>
 
       {weeks.length > 0 && activeWeekId && (

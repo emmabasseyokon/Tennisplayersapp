@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { getPublicAllTimeScoreboard } from '@/lib/queries/public-scores'
 
-const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 export default async function PublicScoreboardPage() {
   const scoreboard = await getPublicAllTimeScoreboard()
@@ -42,7 +41,7 @@ export default async function PublicScoreboardPage() {
                         : 'bg-orange-400/20'
                   }`}
                 >
-                  <div className="text-3xl">{MEDAL[entry.rank]}</div>
+                  <div className="text-2xl font-extrabold text-white">#{entry.rank}</div>
                   <p className="mt-1 font-bold text-white">{entry.full_name}</p>
                   <p className="text-2xl font-extrabold text-white">{entry.total_points}</p>
                   <p className="text-xs text-blue-200">points</p>
@@ -68,15 +67,13 @@ export default async function PublicScoreboardPage() {
               <tbody className="divide-y divide-white/5">
                 {scoreboard.map(entry => (
                   <tr key={entry.member_id} className="hover:bg-white/5">
-                    <td className="px-4 py-3 text-lg text-white">
-                      {MEDAL[entry.rank] ?? <span className="text-sm text-blue-300">#{entry.rank}</span>}
+                    <td className="px-4 py-3 text-sm font-bold text-white">
+                      #{entry.rank}
                     </td>
                     <td className="px-4 py-3 font-medium text-white">{entry.full_name}</td>
                     <td className="px-4 py-3 text-center text-blue-300">{entry.weeks_participated}</td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="inline-block rounded-full bg-blue-500/30 px-2.5 py-0.5 text-xs font-semibold text-blue-100">
-                        {entry.total_points} pts
-                      </span>
+                    <td className="px-4 py-3 text-right text-sm font-bold uppercase text-white">
+                      {entry.total_points} points
                     </td>
                   </tr>
                 ))}

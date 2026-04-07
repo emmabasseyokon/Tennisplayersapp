@@ -3,14 +3,10 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { WeeklyScore } from '@/types/database.types'
-import { Badge } from '@/components/ui/Badge'
-
 interface Props {
   initialScores: WeeklyScore[]
   weekId: string
 }
-
-const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 export function LeaderboardTable({ initialScores, weekId }: Props) {
   const [scores, setScores] = useState<WeeklyScore[]>(initialScores)
@@ -59,12 +55,12 @@ export function LeaderboardTable({ initialScores, weekId }: Props) {
         <tbody className="divide-y divide-gray-100">
           {scores.map((score) => (
             <tr key={score.member_id} className="hover:bg-gray-50">
-              <td className="py-2 pr-3 font-bold text-gray-600 sm:py-3 sm:pr-4">
-                {MEDAL[score.rank] ?? `#${score.rank}`}
+              <td className="py-2 pr-3 text-sm font-bold text-gray-900 sm:py-3 sm:pr-4">
+                #{score.rank}
               </td>
               <td className="py-2 pr-3 font-medium text-gray-800 sm:py-3 sm:pr-4">{score.full_name}</td>
-              <td className="py-2 text-right sm:py-3">
-                <Badge variant="info">{score.total_points} pts</Badge>
+              <td className="py-2 text-right text-sm font-bold uppercase text-gray-900 sm:py-3">
+                {score.total_points} points
               </td>
             </tr>
           ))}
