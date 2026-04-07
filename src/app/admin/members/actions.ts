@@ -113,7 +113,7 @@ export async function importMembers(
     }
 
     // Record the imported points as submissions for all selected weeks
-    if (weekIds && weekIds.length > 0 && points > 0) {
+    if (weekIds && weekIds.length > 0) {
       const submissions = weekIds.map(wId => ({
         week_id: wId,
         member_id: data.id,
