@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Week, Member, Submission } from '@/types/database.types'
+import { revalidateScoreboards } from '@/app/admin/actions'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
@@ -63,6 +64,7 @@ export function ScoreRecorderGrid({ week, members, initialSubmissions }: Props) 
       setError(err.message)
       setSaving(false)
     } else {
+      await revalidateScoreboards()
       router.push('/admin/scoreboard')
     }
   }
