@@ -51,6 +51,25 @@ export function ScoreRecorderGrid({ week, members, initialSubmissions }: Props) 
         recorded_by: user?.id ?? null,
       }))
 
+    // Members whose score was cleared — delete their submissions
+    const clearedMemberIds = members
+      .filter(m => values[m.id] === '' || values[m.id] === undefined)
+      .map(m => m.id)
+
+    if (clearedMemberIds.length > 0) {
+      await supabase
+        .from('submissions')
+        .delete()
+        .eq('week_id', week.id)
+        .in('member_id', clearedMemberIds)
+    }
+
+    if (upserts.length === 0 && clearedMemberIds.length > 0) {
+      await revalidateScoreboards()
+      router.push('/admin/scoreboard')
+      return
+    }
+
     if (upserts.length === 0) {
       setSaving(false)
       return
