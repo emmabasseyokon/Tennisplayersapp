@@ -74,14 +74,13 @@ export async function deleteMember(memberId: string) {
 
 export type ImportResult = {
   full_name: string
-  points: number
   status: 'success' | 'error'
   reason: string
   memberId?: string
 }
 
 export async function importMembers(
-  rows: { full_name: string; points: number }[]
+  rows: { full_name: string }[]
 ): Promise<{ error: string } | { results: ImportResult[] }> {
   const { error: authErr, supabase } = await verifyAdmin()
   if (authErr || !supabase) return { error: authErr ?? 'Not authorized' }
@@ -89,23 +88,13 @@ export async function importMembers(
   if (!Array.isArray(rows) || rows.length === 0) return { error: 'No members provided.' }
   if (rows.length > 200) return { error: 'Maximum 200 members per import.' }
 
-  // Find the latest unlocked week to assign scores to
-  const { data: latestWeek } = await supabase
-    .from('weeks')
-    .select('id')
-    .eq('is_locked', false)
-    .order('start_date', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
   const results: ImportResult[] = []
 
   for (const row of rows) {
     const full_name = (row.full_name ?? '').trim()
-    const points    = Number(row.points) || 0
 
     if (!full_name) {
-      results.push({ full_name, points, status: 'error', reason: 'Name is empty' })
+      results.push({ full_name, status: 'error', reason: 'Name is empty' })
       continue
     }
 
@@ -116,23 +105,11 @@ export async function importMembers(
       .single()
 
     if (error) {
-      results.push({ full_name, points, status: 'error', reason: error.message })
+      results.push({ full_name, status: 'error', reason: error.message })
       continue
     }
 
-    // Record points as a submission for the latest unlocked week
-    if (latestWeek) {
-      const { error: subErr } = await supabase
-        .from('submissions')
-        .insert({ week_id: latestWeek.id, member_id: data.id, points })
-
-      if (subErr) {
-        results.push({ full_name, points, status: 'error', reason: `Member created but score failed: ${subErr.message}`, memberId: data.id })
-        continue
-      }
-    }
-
-    results.push({ full_name, points, status: 'success', reason: '', memberId: data.id })
+    results.push({ full_name, status: 'success', reason: '', memberId: data.id })
   }
 
   return { results }

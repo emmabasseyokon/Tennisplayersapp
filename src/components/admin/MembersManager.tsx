@@ -11,7 +11,7 @@ interface Props { initialMembers: Member[]; autoCreate?: boolean }
 
 // ── CSV parsing ───────────────────────────────────────────────────────────────
 
-type ParsedRow = { full_name: string; points: number; rowNum: number; error?: string }
+type ParsedRow = { full_name: string; rowNum: number; error?: string }
 
 function parseCSVLine(line: string): string[] {
   const result: string[] = []
@@ -32,27 +32,22 @@ function parseCSV(text: string): { rows: ParsedRow[]; error?: string } {
   if (lines.length < 2) return { rows: [], error: 'CSV has no data rows.' }
 
   const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().replace(/['"]/g, '').trim())
-  const nameIdx   = headers.findIndex(h => h === 'full_name' || h === 'name')
-  const pointsIdx = headers.findIndex(h => h === 'points')
+  const nameIdx = headers.findIndex(h => h === 'full_name' || h === 'name')
 
   if (nameIdx === -1) return { rows: [], error: 'Missing column: full_name (or name)' }
-  if (pointsIdx === -1) return { rows: [], error: 'Missing column: points' }
 
   const rows: ParsedRow[] = []
 
   for (let i = 1; i < lines.length; i++) {
     const cols      = parseCSVLine(lines[i])
-    const full_name = (cols[nameIdx]  ?? '').replace(/^["']|["']$/g, '').trim()
-    const rawPoints = (cols[pointsIdx] ?? '').replace(/^["']|["']$/g, '').trim()
-    const points    = Number(rawPoints) || 0
+    const full_name = (cols[nameIdx] ?? '').replace(/^["']|["']$/g, '').trim()
 
-    if (!full_name && !rawPoints) continue // skip blank lines
+    if (!full_name) continue
 
     let error: string | undefined
     if (!full_name) error = 'Name is empty'
-    else if (isNaN(Number(rawPoints))) error = 'Invalid points value'
 
-    rows.push({ full_name, points, rowNum: i + 1, error })
+    rows.push({ full_name, rowNum: i + 1, error })
   }
 
   if (rows.length === 0) return { rows: [], error: 'No data rows found.' }
@@ -165,7 +160,7 @@ export function MembersManager({ initialMembers, autoCreate }: Props) {
     const validRows = importRows.filter(r => !r.error)
     if (validRows.length === 0) return
     setImporting(true)
-    const res = await importMembers(validRows.map(r => ({ full_name: r.full_name, points: r.points })))
+    const res = await importMembers(validRows.map(r => ({ full_name: r.full_name })))
     setImporting(false)
     if ('error' in res) { setParseError(res.error); return }
     setImportResults(res.results)
@@ -329,8 +324,8 @@ export function MembersManager({ initialMembers, autoCreate }: Props) {
 
             <div className="mb-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
               <p className="font-medium">Required CSV columns:</p>
-              <p className="mt-1 font-mono text-xs">name, points</p>
-              <p className="mt-1 text-xs text-blue-600">Members will be created with their names and points.</p>
+              <p className="mt-1 font-mono text-xs">name</p>
+              <p className="mt-1 text-xs text-blue-600">Members will be created. Scores are recorded via tasks.</p>
             </div>
 
             <label className="mb-4 flex cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed border-gray-300 p-4 hover:border-blue-400">
@@ -361,7 +356,6 @@ export function MembersManager({ initialMembers, autoCreate }: Props) {
                       <tr className="border-b border-gray-200 text-left font-medium uppercase tracking-wider text-gray-500">
                         <th className="px-3 py-2">#</th>
                         <th className="px-3 py-2">Name</th>
-                        <th className="px-3 py-2">Points</th>
                         <th className="px-3 py-2">Status</th>
                       </tr>
                     </thead>
@@ -370,7 +364,6 @@ export function MembersManager({ initialMembers, autoCreate }: Props) {
                         <tr key={row.rowNum} className={row.error ? 'bg-red-50' : ''}>
                           <td className="px-3 py-2 text-gray-400">{row.rowNum}</td>
                           <td className="px-3 py-2 text-gray-800">{row.full_name || <span className="italic text-gray-400">empty</span>}</td>
-                          <td className="px-3 py-2 text-gray-600">{row.points}</td>
                           <td className="px-3 py-2">
                             {row.error
                               ? <span className="text-red-600">✗ {row.error}</span>
@@ -419,7 +412,6 @@ export function MembersManager({ initialMembers, autoCreate }: Props) {
                 <thead className="sticky top-0 bg-gray-50">
                   <tr className="border-b border-gray-200 text-left font-medium uppercase tracking-wider text-gray-500">
                     <th className="px-3 py-2">Name</th>
-                    <th className="px-3 py-2">Points</th>
                     <th className="px-3 py-2">Status</th>
                   </tr>
                 </thead>
@@ -427,7 +419,6 @@ export function MembersManager({ initialMembers, autoCreate }: Props) {
                   {importResults.map((r, i) => (
                     <tr key={i} className={r.status === 'error' ? 'bg-red-50' : ''}>
                       <td className="px-3 py-2 text-gray-800">{r.full_name}</td>
-                      <td className="px-3 py-2 text-gray-600">{r.points}</td>
                       <td className="px-3 py-2">
                         {r.status === 'success'
                           ? <span className="text-green-600">✓ created</span>

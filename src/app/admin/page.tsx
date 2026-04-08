@@ -12,12 +12,16 @@ export default async function AdminDashboard() {
     getMembers(),
   ])
 
-  const { count: scoredThisWeek } = latestWeek
-    ? await supabase
-        .from('submissions')
-        .select('*', { count: 'exact', head: true })
-        .eq('week_id', latestWeek.id)
-    : { count: 0 }
+  // Count distinct members who have at least one task completion this week
+  let scoredThisWeek = 0
+  if (latestWeek) {
+    const { data: completions } = await supabase
+      .from('task_completions')
+      .select('member_id')
+      .eq('week_id', latestWeek.id)
+    const uniqueMembers = new Set((completions ?? []).map(c => c.member_id))
+    scoredThisWeek = uniqueMembers.size
+  }
 
   return (
     <div className="space-y-6">

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getWeek } from '@/lib/queries/weeks'
 import { getMembers } from '@/lib/queries/members'
-import { getAllSubmissionsForWeek } from '@/lib/queries/scores'
+import { getTasksForWeek, getTaskCompletionsForWeek } from '@/lib/queries/tasks'
 import { ScoreRecorderGrid } from '@/components/admin/ScoreRecorderGrid'
 
 interface Props {
@@ -10,10 +10,11 @@ interface Props {
 
 export default async function RecordScoresPage({ params }: Props) {
   const { weekId } = await params
-  const [week, members, submissions] = await Promise.all([
+  const [week, members, tasks, completions] = await Promise.all([
     getWeek(weekId),
     getMembers(),
-    getAllSubmissionsForWeek(weekId),
+    getTasksForWeek(weekId),
+    getTaskCompletionsForWeek(weekId),
   ])
 
   if (!week) notFound()
@@ -22,7 +23,8 @@ export default async function RecordScoresPage({ params }: Props) {
     <ScoreRecorderGrid
       week={week}
       members={members}
-      initialSubmissions={submissions}
+      tasks={tasks}
+      initialCompletions={completions}
     />
   )
 }

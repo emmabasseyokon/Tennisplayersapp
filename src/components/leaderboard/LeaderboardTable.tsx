@@ -14,12 +14,12 @@ export function LeaderboardTable({ initialScores, weekId }: Props) {
   useEffect(() => {
     const supabase = createClient()
 
-    // Re-fetch leaderboard whenever submissions change for this week
+    // Re-fetch leaderboard whenever task completions change for this week
     const channel = supabase
       .channel(`leaderboard-${weekId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'submissions', filter: `week_id=eq.${weekId}` },
+        { event: '*', schema: 'public', table: 'task_completions', filter: `week_id=eq.${weekId}` },
         async () => {
           const { data } = await supabase
             .from('weekly_scores')

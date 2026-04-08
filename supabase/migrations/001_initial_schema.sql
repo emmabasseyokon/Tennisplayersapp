@@ -24,7 +24,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
@@ -51,34 +51,63 @@ CREATE TABLE public.weeks (
 );
 
 
--- ── Submissions (one row per member per week) ───────────────
-CREATE TABLE public.submissions (
+-- ── Tasks (belong to a week) ────────────────────────────────
+CREATE TABLE public.tasks (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  week_id     uuid NOT NULL REFERENCES public.weeks(id) ON DELETE CASCADE,
+  name        text NOT NULL,
+  points      integer NOT NULL CHECK (points > 0),
+  sort_order  integer NOT NULL DEFAULT 0,
+  created_at  timestamptz DEFAULT now()
+);
+
+
+-- ── Task Completions (member completed a task) ──────────────
+CREATE TABLE public.task_completions (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   week_id     uuid NOT NULL REFERENCES public.weeks(id) ON DELETE CASCADE,
   member_id   uuid NOT NULL REFERENCES public.members(id) ON DELETE CASCADE,
-  points      integer NOT NULL CHECK (points >= 0),
-  note        text,
+  task_id     uuid NOT NULL REFERENCES public.tasks(id) ON DELETE CASCADE,
   recorded_by uuid REFERENCES public.profiles(id),
   created_at  timestamptz DEFAULT now(),
-  UNIQUE (week_id, member_id)
+  UNIQUE (week_id, member_id, task_id)
 );
 
--- Prevent writes to locked weeks
+-- Prevent writes to locked weeks (completions)
 CREATE OR REPLACE FUNCTION public.check_week_not_locked()
 RETURNS trigger AS $$
 DECLARE locked boolean;
 BEGIN
   SELECT is_locked INTO locked FROM public.weeks WHERE id = NEW.week_id;
   IF locked THEN
-    RAISE EXCEPTION 'Cannot modify submissions for a locked week';
+    RAISE EXCEPTION 'Cannot modify data for a locked week';
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
-CREATE TRIGGER submissions_lock_check
-  BEFORE INSERT OR UPDATE ON public.submissions
+CREATE TRIGGER completions_lock_check
+  BEFORE INSERT OR UPDATE OR DELETE ON public.task_completions
   FOR EACH ROW EXECUTE FUNCTION public.check_week_not_locked();
+
+-- Prevent task changes on locked weeks
+CREATE OR REPLACE FUNCTION public.check_task_week_not_locked()
+RETURNS trigger AS $$
+DECLARE locked boolean;
+  wid uuid;
+BEGIN
+  wid := COALESCE(NEW.week_id, OLD.week_id);
+  SELECT is_locked INTO locked FROM public.weeks WHERE id = wid;
+  IF locked THEN
+    RAISE EXCEPTION 'Cannot modify tasks for a locked week';
+  END IF;
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql SET search_path = '';
+
+CREATE TRIGGER tasks_lock_check
+  BEFORE INSERT OR UPDATE OR DELETE ON public.tasks
+  FOR EACH ROW EXECUTE FUNCTION public.check_task_week_not_locked();
 
 
 -- ── Weekly Scores View ───────────────────────────────────────
@@ -86,26 +115,32 @@ CREATE VIEW public.weekly_scores
   WITH (security_invoker = true)
 AS
 SELECT
-  s.week_id,
+  t.week_id,
   w.label      AS week_label,
   w.start_date,
-  s.member_id,
+  tc.member_id,
   m.full_name,
-  s.points     AS total_points,
-  RANK() OVER (PARTITION BY s.week_id ORDER BY s.points DESC) AS rank
-FROM public.submissions s
-JOIN public.members m ON m.id = s.member_id
-JOIN public.weeks w   ON w.id = s.week_id;
+  COALESCE(SUM(t.points), 0)::integer AS total_points,
+  RANK() OVER (
+    PARTITION BY t.week_id
+    ORDER BY COALESCE(SUM(t.points), 0) DESC
+  ) AS rank
+FROM public.task_completions tc
+JOIN public.tasks t   ON t.id = tc.task_id
+JOIN public.members m ON m.id = tc.member_id
+JOIN public.weeks w   ON w.id = t.week_id
+GROUP BY t.week_id, w.label, w.start_date, tc.member_id, m.full_name;
 
 
 -- ============================================================
 -- Row Level Security
 -- ============================================================
 
-ALTER TABLE public.profiles    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.members     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.weeks       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.members          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.weeks            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tasks            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.task_completions ENABLE ROW LEVEL SECURITY;
 
 -- Helper function: is current user an admin?
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -114,7 +149,8 @@ RETURNS boolean AS $$
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid() AND role = 'admin'
   );
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
+$$ LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = '';
 
 
 -- ── profiles policies ────────────────────────────────────────
@@ -149,12 +185,23 @@ CREATE POLICY "Admins can manage weeks"
   WITH CHECK (public.is_admin());
 
 
--- ── submissions policies ─────────────────────────────────────
-CREATE POLICY "Admins can view all submissions"
-  ON public.submissions FOR SELECT
+-- ── tasks policies ───────────────────────────────────────────
+CREATE POLICY "Admins can view tasks"
+  ON public.tasks FOR SELECT
   USING (public.is_admin());
 
-CREATE POLICY "Admins can manage submissions"
-  ON public.submissions FOR ALL
+CREATE POLICY "Admins can manage tasks"
+  ON public.tasks FOR ALL
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+
+-- ── task_completions policies ────────────────────────────────
+CREATE POLICY "Admins can view all completions"
+  ON public.task_completions FOR SELECT
+  USING (public.is_admin());
+
+CREATE POLICY "Admins can manage completions"
+  ON public.task_completions FOR ALL
   USING (public.is_admin())
   WITH CHECK (public.is_admin());
