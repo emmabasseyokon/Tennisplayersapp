@@ -6,22 +6,18 @@ import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
 const geist = Geist({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "God's Men of Valor — GMOV",
-  description: 'Weekly participation scoring portal for GMOV members',
+  title: 'Tennis Players — Age Screening',
+  description: 'Junior tennis players register for tournament age screening',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'GMOV',
-  },
-  icons: {
-    icon: '/icons/icon-192.png',
-    apple: '/icons/icon-192.png',
+    title: 'Tennis Players',
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#1d4ed8',
+  themeColor: '#14532d',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,

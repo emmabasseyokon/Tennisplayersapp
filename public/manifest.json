@@ -1,23 +1,17 @@
 {
-  "name": "God's Men of Valor — GMOV",
-  "short_name": "GMOV",
-  "description": "Weekly participation scoring portal for GMOV members",
+  "name": "Tennis Players — Age Screening",
+  "short_name": "Tennis Players",
+  "description": "Junior tennis players register for tournament age screening",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f9fafb",
-  "theme_color": "#1d4ed8",
+  "theme_color": "#14532d",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
