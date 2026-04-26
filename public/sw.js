@@ -1,10 +1,6 @@
-const CACHE_NAME = 'gmov-v1'
-const PRECACHE_URLS = ['/', '/login']
+const CACHE_NAME = 'tennis-players-v1'
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
-  )
+self.addEventListener('install', () => {
   self.skipWaiting()
 })
 
@@ -19,15 +15,20 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event
-  // Skip non-GET and Supabase/auth API requests
   if (request.method !== 'GET') return
+
+  // Never intercept HTML/document/navigation requests — caching them
+  // produces hydration mismatches when the server bundle changes.
+  if (request.mode === 'navigate') return
+  const accept = request.headers.get('accept') || ''
+  if (accept.includes('text/html')) return
+
   const url = new URL(request.url)
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) return
 
   event.respondWith(
     fetch(request)
       .then((response) => {
-        // Cache successful page/asset responses
         if (response.ok && response.type === 'basic') {
           const clone = response.clone()
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
