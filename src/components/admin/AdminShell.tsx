@@ -5,10 +5,7 @@ import Link from 'next/link'
 
 const NAV = [
   { href: '/admin', label: 'Dashboard' },
-  { href: '/admin/scoreboard', label: 'Overall Scoreboard' },
-  { href: '/admin/weekly-scoreboard', label: 'Weekly Scoreboard' },
-  { href: '/admin/weeks', label: 'Weeks' },
-  { href: '/admin/members', label: 'Members' },
+  { href: '/admin/players', label: 'Players' },
 ]
 
 interface Props {
@@ -22,23 +19,25 @@ export function AdminShell({ fullName, children }: Props) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top header */}
-      <header className="sticky top-0 z-20 border-b border-gray-200 bg-blue-900 text-white shadow-sm">
+      <header className="sticky top-0 z-20 border-b border-gray-200 bg-green-900 text-white shadow-sm">
         <div className="flex items-center justify-between px-4 py-3">
           {/* Logo — always left */}
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-              <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-lime-300/20">
+              <svg className="h-5 w-5 text-lime-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+                <circle cx="12" cy="12" r="9" fill="currentColor" stroke="none" opacity="0.95" />
+                <path d="M3.5 9.5C7 10.5 10 13 11 17.5" stroke="#14532d" strokeLinecap="round" />
+                <path d="M20.5 9.5C17 10.5 14 13 13 17.5" stroke="#14532d" strokeLinecap="round" />
               </svg>
             </div>
-            <span className="font-semibold">GMOV Admin</span>
+            <span className="font-semibold">Tennis Players Admin</span>
           </div>
 
           {/* Desktop right side: name + sign out */}
           <div className="hidden items-center gap-3 sm:flex">
-            <span className="text-sm text-blue-200">{fullName}</span>
+            <span className="text-sm text-lime-200">{fullName}</span>
             <form action="/api/auth/signout" method="POST">
-              <button type="submit" className="rounded-lg px-3 py-1.5 text-sm text-blue-200 hover:bg-blue-800 hover:text-white">
+              <button type="submit" className="rounded-lg px-3 py-1.5 text-sm text-lime-200 hover:bg-green-800 hover:text-white">
                 Sign out
               </button>
             </form>
@@ -47,7 +46,7 @@ export function AdminShell({ fullName, children }: Props) {
           {/* Hamburger — mobile only, right side */}
           <button
             onClick={() => setMenuOpen(o => !o)}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-white hover:bg-blue-800 sm:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-white hover:bg-green-800 sm:hidden"
             aria-label="Toggle menu"
           >
             {menuOpen ? (
@@ -64,24 +63,24 @@ export function AdminShell({ fullName, children }: Props) {
 
         {/* Mobile dropdown menu */}
         {menuOpen && (
-          <nav className="border-t border-blue-800 bg-blue-900 px-2 py-2 sm:hidden">
+          <nav className="border-t border-green-800 bg-green-900 px-2 py-2 sm:hidden">
             {NAV.map(item => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMenuOpen(false)}
-                className="block rounded-lg px-4 py-2.5 text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white"
+                className="block rounded-lg px-4 py-2.5 text-sm font-medium text-lime-100 hover:bg-green-800 hover:text-white"
               >
                 {item.label}
               </Link>
             ))}
             {/* Divider + user info + sign out */}
-            <div className="mt-2 border-t border-blue-800 pt-2">
-              <p className="px-4 py-2 text-xs text-blue-300">{fullName}</p>
+            <div className="mt-2 border-t border-green-800 pt-2">
+              <p className="px-4 py-2 text-xs text-lime-300">{fullName}</p>
               <form action="/api/auth/signout" method="POST">
                 <button
                   type="submit"
-                  className="w-full rounded-lg px-4 py-2.5 text-left text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white"
+                  className="w-full rounded-lg px-4 py-2.5 text-left text-sm font-medium text-lime-100 hover:bg-green-800 hover:text-white"
                 >
                   Sign out
                 </button>

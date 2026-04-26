@@ -35,17 +35,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-950 to-blue-800 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-950 to-green-800 px-4">
       <div className="w-full max-w-md">
         {/* Logo / header */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/10">
-            <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-lime-300/20">
+            <svg className="h-9 w-9 text-lime-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+              <circle cx="12" cy="12" r="9" fill="currentColor" stroke="none" opacity="0.95" />
+              <path d="M3.5 9.5C7 10.5 10 13 11 17.5" stroke="white" strokeLinecap="round" />
+              <path d="M20.5 9.5C17 10.5 14 13 13 17.5" stroke="white" strokeLinecap="round" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-white">God&apos;s Men of Valor</h1>
-          <p className="mt-1 text-sm text-blue-200">Admin Portal</p>
+          <h1 className="text-2xl font-bold text-white">Tennis Players</h1>
+          <p className="mt-1 text-sm text-lime-200">Junior Tournament Age Screening</p>
         </div>
 
         {/* Card */}
@@ -69,7 +71,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none focus:ring-1 focus:ring-lime-500"
                 placeholder="you@example.com"
               />
             </div>
@@ -84,7 +86,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none focus:ring-1 focus:ring-lime-500"
                 placeholder="••••••••"
               />
             </div>
@@ -95,7 +97,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="mt-6 text-center text-sm text-blue-200">
+        <p className="mt-6 text-center text-sm text-lime-200">
           Contact your admin if you need an account.
         </p>
       </div>
