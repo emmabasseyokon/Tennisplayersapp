@@ -6,7 +6,7 @@ import {
   updatePlayer,
   deletePlayer,
   getDocumentSignedUrl,
-} from '@/app/admin/players/actions'
+} from '@/app/admin/actions'
 import type { Player, Gender } from '@/types/database.types'
 import {
   AGE_CATEGORIES,

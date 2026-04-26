@@ -5,7 +5,6 @@ import Link from 'next/link'
 
 const NAV = [
   { href: '/admin', label: 'Dashboard' },
-  { href: '/admin/players', label: 'Players' },
 ]
 
 interface Props {
@@ -35,9 +34,9 @@ export function AdminShell({ fullName, children }: Props) {
 
           {/* Desktop right side: name + sign out */}
           <div className="hidden items-center gap-3 sm:flex">
-            <span className="text-sm text-lime-200">{fullName}</span>
+            <span className="text-sm text-white">{fullName}</span>
             <form action="/api/auth/signout" method="POST">
-              <button type="submit" className="rounded-lg px-3 py-1.5 text-sm text-lime-200 hover:bg-green-800 hover:text-white">
+              <button type="submit" className="rounded-lg px-3 py-1.5 text-sm text-white hover:bg-green-800">
                 Sign out
               </button>
             </form>
@@ -76,11 +75,11 @@ export function AdminShell({ fullName, children }: Props) {
             ))}
             {/* Divider + user info + sign out */}
             <div className="mt-2 border-t border-green-800 pt-2">
-              <p className="px-4 py-2 text-xs text-lime-300">{fullName}</p>
+              <p className="px-4 py-2 text-xs text-white">{fullName}</p>
               <form action="/api/auth/signout" method="POST">
                 <button
                   type="submit"
-                  className="w-full rounded-lg px-4 py-2.5 text-left text-sm font-medium text-lime-100 hover:bg-green-800 hover:text-white"
+                  className="w-full rounded-lg px-4 py-2.5 text-left text-sm font-medium text-white hover:bg-green-800"
                 >
                   Sign out
                 </button>

@@ -114,7 +114,6 @@ export async function createPlayer(
     if (updErr) return { error: updErr.message }
   }
 
-  revalidatePath('/admin/players')
   revalidatePath('/admin')
   return { success: true, playerId: inserted.id }
 }
@@ -171,7 +170,7 @@ export async function updatePlayer(
     if (updErr) return { error: updErr.message }
   }
 
-  revalidatePath('/admin/players')
+  revalidatePath('/admin')
   return { success: true }
 }
 
@@ -195,7 +194,6 @@ export async function deletePlayer(
 
   if (existing?.dob_document_url) await removeDocument(supabase, existing.dob_document_url)
 
-  revalidatePath('/admin/players')
   revalidatePath('/admin')
   return { success: true }
 }
