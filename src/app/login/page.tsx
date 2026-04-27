@@ -47,7 +47,7 @@ export default function LoginPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-white">Tennis Players</h1>
-          <p className="mt-1 text-sm text-lime-200">Junior Tournament Age Screening</p>
+          <p className="mt-1 text-sm text-white">Junior Tournament Age Screening</p>
         </div>
 
         {/* Card */}
@@ -97,7 +97,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="mt-6 text-center text-sm text-lime-200">
+        <p className="mt-6 text-center text-sm text-white">
           Contact your admin if you need an account.
         </p>
       </div>
